@@ -2,6 +2,8 @@
 // info@patrickbrosi.de
 
 #include <algorithm>
+#include <cmath>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <limits>
@@ -230,14 +232,37 @@ void ConfigFileParser::parse(std::istream& is, const std::string& path) {
 const std::string& ConfigFileParser::getStr(Sec sec, const Key& key) const {
   return _kvs[_secs.find(sec)->second].find(key)->second.val;
 }
+
 // _____________________________________________________________________________
 int ConfigFileParser::getInt(Sec sec, const Key& key) const {
   return atoi(_kvs[_secs.find(sec)->second].find(key)->second.val.c_str());
 }
+
 // _____________________________________________________________________________
 double ConfigFileParser::getDouble(Sec sec, const Key& key) const {
+  auto v = _kvs[_secs.find(sec)->second].find(key)->second;
+  if (!isFloat(v.val)) {
+    throw ParseExc(v.line, v.pos, "floating number for '" + key + "'",
+                   std::string("'") + v.val + "'", v.file);
+  }
   return atof(_kvs[_secs.find(sec)->second].find(key)->second.val.c_str());
 }
+
+// _____________________________________________________________________________
+double ConfigFileParser::getPosDouble(Sec sec, const Key& key) const {
+  auto v = _kvs[_secs.find(sec)->second].find(key)->second;
+  if (!isFloat(v.val)) {
+    throw ParseExc(v.line, v.pos, "positive floating number for '" + key + "'",
+                   std::string("'") + v.val + "'", v.file);
+  }
+  double d = atof(_kvs[_secs.find(sec)->second].find(key)->second.val.c_str());
+  if (d < 0) {
+    throw ParseExc(v.line, v.pos, "positive floating number for '" + key + "'",
+                   std::string("'") + v.val + "'", v.file);
+  }
+  return d;
+}
+
 // _____________________________________________________________________________
 bool ConfigFileParser::getBool(Sec sec, const Key& key) const {
   return toBool(getStr(sec, key));
@@ -365,6 +390,13 @@ void ConfigFileParser::updateVals(size_t sec, const KeyVals& kvs) {
   for (auto& kv : kvs) {
     _kvs[sec][kv.first] = kv.second;
   }
+}
+
+// _____________________________________________________________________________
+bool ConfigFileParser::isFloat(const std::string& str) const {
+  char* l = 0;
+  auto v = std::strtod(str.c_str(), &l);
+  return l != str.c_str() && *l == 0 && v != HUGE_VAL;
 }
 
 // _____________________________________________________________________________

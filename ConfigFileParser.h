@@ -78,6 +78,7 @@ class ConfigFileParser {
   const std::string& getStr(Sec sec, const Key& key) const;
   int getInt(Sec sec, const Key& key) const;
   double getDouble(Sec sec, const Key& key) const;
+  double getPosDouble(Sec sec, const Key& key) const;
   bool getBool(Sec sec, const Key& key) const;
 
   std::vector<std::string> getStrArr(Sec sec, const Key& key, char del) const;
@@ -101,6 +102,8 @@ class ConfigFileParser {
   bool isKeyChar(char t) const;
   std::string trim(const std::string& str) const;
   bool toBool(std::string str) const;
+
+  bool isFloat(const std::string& str) const;
 
   void updateVals(size_t sec, const KeyVals& kvs);
   std::string relPath(const std::string& file, std::string curFile) const;
